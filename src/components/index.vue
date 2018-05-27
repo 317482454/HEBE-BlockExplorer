@@ -1,0 +1,294 @@
+<template>
+  <el-container>
+    <fhead></fhead>
+    <el-main >
+      <el-card class="box-card center">
+        <div slot="header" class="clearfix">
+          <span>区块</span>
+        </div>
+        <el-table
+                v-loading="BlocksLoading"
+                  stripe
+                  :data="BlocksData"
+                  style="width: 100%">
+          <el-table-column type="expand">
+            <template slot-scope="scope">
+              <el-table
+                      :data="scope.row.transactions"
+                      border
+                      style="width: 100%">
+                <el-table-column
+                        prop="senderRS"
+                        label="发送地址"
+                        width="280">
+                </el-table-column>
+                <el-table-column
+                        prop="recipientRS"
+                        label="接收地址"
+                        width="280">
+                </el-table-column>
+                <el-table-column
+                        label="数量"
+                        width="180">
+                  <template slot-scope="scope">
+                    {{$g.wallet.amount(scope.row.amountNQT)}}
+                  </template>
+                </el-table-column>
+                <el-table-column
+                        label="手续费"
+                        width="180">
+                  <template slot-scope="scope">
+                    {{$g.wallet.amount(scope.row.feeNQT)}}
+                  </template>
+                </el-table-column>
+              </el-table>
+            </template>
+          </el-table-column>
+
+          <el-table-column
+                  label="高度"
+                  width="180">
+            <template  slot-scope="scope">
+              <router-link :to="'block/'+scope.row.height">
+                <el-button type="text"> {{scope.row.height}}</el-button>
+              </router-link>
+            </template>
+          </el-table-column>
+          <el-table-column
+                  label="日期"
+                  width="180">
+            <template slot-scope="scope">
+              {{$g.wallet.formatDateTime(scope.row.timestamp*1000+($store.state.epochBeginning-500))}}
+            </template>
+          </el-table-column>
+          <el-table-column
+                  label="转账数量"
+                  width="180">
+            <template slot-scope="scope">
+              {{$g.wallet.amount(scope.row.totalAmountNQT)}}
+            </template>
+          </el-table-column>
+          <el-table-column
+                  label="交易费"
+                  width="120">
+            <template slot-scope="scope">
+              {{$g.wallet.amount(scope.row.totalFeeNQT)}}
+            </template>
+          </el-table-column>
+          <el-table-column
+                  prop="transactions.length"
+                  label="交易数"
+                  width="80">
+          </el-table-column>
+          <el-table-column
+                  label="出块者"
+                  width="280">
+            <template slot-scope="scope">
+              <router-link :to="'/account/'+scope.row.generatorRS">
+                <el-button type="text"> {{scope.row.generatorRS}}</el-button>
+              </router-link>
+            </template>
+          </el-table-column>
+        </el-table>
+      </el-card>
+      <el-card class="box-card center" style="margin-top: 60px">
+        <div slot="header" class="clearfix">
+          <span>锻造池</span>
+          <span style="color: #909399;">（锻造人数：{{nextBlock.activeCount}}，非全部锻造人数）</span>
+        </div>
+        <el-table
+                v-loading="nextBlockLoading"
+                stripe
+                  :data="nextBlock.generators"
+                  style="width: 100%">
+          <el-table-column type="expand">
+            <template slot-scope="scope">
+              <el-table
+                      :data="scope.row.lessors"
+                      border
+                      style="width: 460px">
+                <el-table-column
+                        label="出租地址"
+                        width="280">
+                  <template slot-scope="scope">
+                    <router-link :to="'/account/'+scope.row.lessorRS">
+                      <el-button type="text"> {{scope.row.lessorRS}}</el-button>
+                    </router-link>
+                  </template>
+                </el-table-column>
+                <el-table-column
+                        label="出租数量"
+                        width="180">
+                  <template slot-scope="scope">
+                    {{$g.wallet.amount(scope.row.guaranteedBalanceNQT)}}
+                  </template>
+                </el-table-column>
+              </el-table>
+            </template>
+          </el-table-column>
+          <el-table-column
+                  label="账户地址"
+                  width="280">
+            <template slot-scope="scope">
+              <router-link :to="'/account/'+scope.row.accountRS">
+                <el-button type="text"> {{scope.row.accountRS}}</el-button>
+              </router-link>
+            </template>
+          </el-table-column>
+          <el-table-column
+                  prop="effectiveBalanceNXT"
+                  label="锻造数量"
+                  width="180">
+          </el-table-column>
+          <el-table-column
+                  prop="sum"
+                  label="出租人数量"
+                  width="180">
+          </el-table-column>
+          <el-table-column
+                  label="出块时间"
+                  width="180">
+            <template slot-scope="scope">
+              {{$g.wallet.formatDateTime(scope.row.hitTime*1000+($store.state.epochBeginning-500))}}
+            </template>
+          </el-table-column>
+          <el-table-column
+                  prop="deadline"
+                  label="出块倒计时间"
+                  width="180">
+          </el-table-column>
+
+        </el-table>
+      </el-card>
+    </el-main>
+    <el-footer class="footer">
+      COPYRIGHT © 2018. ALL RIGHTS RESERVED. DESIGNED BY
+      <a target="_blank" href="https://hebeblock.com/">HEBEBLOCK</a>
+    </el-footer>
+  </el-container>
+</template>
+
+<script>
+  import fhead from './fhead.vue';
+  var deadline;
+  var load;
+  var loadline;
+  export default {
+    name: 'HelloWorld',
+      components: {
+          fhead
+      },
+    data () {
+      return {
+          BlocksLoading:true,
+          nextBlockLoading:true,
+          BlocksData:[],
+          nextBlock:{
+              generators:[]
+          }
+      }
+    },
+    methods: {
+        Transactions(item){
+            if(item.transactions.length!=0&&!item.transactions[0].amountNQT){
+                this.$ajax({
+                    method: 'get',
+                    url: 'requestType=getBlock&height='+item.height+'&includeTransactions=true&includeExecutedPhased=true'
+                }).then(response => {
+                    item.transactions=response.transactions
+                });
+            }
+        },
+        Lessors(item){
+            this.$ajax({
+                method: 'get',
+                url: 'requestType=getAccountLessors&account='+item.accountRS,
+            }).then(response=>{
+                item.lessors=response.lessors;
+                item.sum=response.lessors.length;
+            })
+        },
+        Generators(){
+            this.nextBlockLoading=true;
+
+            this.$ajax({
+                method: 'get',
+                url: 'requestType=getNextBlockGenerators&limit=5',
+            }).then(response => {
+                if(this.nextBlock.generators.length!=0&&
+                    response.generators[0].hitTime==
+                    this.nextBlock.generators[0].hitTime){
+
+                }else{
+                    this.nextBlock=response;
+                }
+                this.nextBlockLoading=false;
+
+                this.nextBlock.generators.forEach(item=>{
+                    this.Lessors(item);
+                    item.deadline=this.$g.wallet.timeDiff(
+                        this.$g.wallet.formatDateTime(
+                            item.hitTime*1000+(this.$store.state.epochBeginning-500)
+                        )
+                    );
+                })
+                window.clearInterval(deadline);
+
+                deadline=setInterval(()=>{
+                    this.nextBlock.generators.forEach(item=> {
+                        --item.deadline;
+                    });
+                },1000);
+            });
+        },
+        Blocks(){
+            this.BlocksLoading=true;
+            this.$ajax({
+                method: 'get',
+                url: 'requestType=getBlocks&firstIndex=0&lastIndex=5&includeTransactions=true',
+            }).then(response => {
+                this.BlocksLoading=false;
+                if(this.BlocksData.length!=0&&
+                        this.BlocksData[0].height!=response.blocks[0].height) {
+                    this.BlocksData.unshift(response.blocks[0]);
+                    this.Transactions(this.BlocksData[0]);
+                    this.BlocksData.pop();
+                }
+
+                if(this.BlocksData.length==0){
+                    this.BlocksData=response.blocks;
+                    this.BlocksData.forEach(item=>{
+                        this.Transactions(item);
+                    })
+                    this.BlocksData=response.blocks;
+                }
+
+            });
+        }
+    },
+      beforeDestroy: function () {
+          window.clearInterval(load)
+          window.clearInterval(loadline)
+          window.clearInterval(deadline)
+      },
+    created: function () {
+        load = setInterval(() => {
+            if (this.$store.state.epochBeginning != '') {
+                this.Generators()
+                this.Blocks();
+                loadline=setInterval(() => {
+                    this.Blocks();
+                    this.Generators()
+                }, 10000)
+                window.clearInterval(load)
+            }
+        }, 2000);
+
+    }
+  }
+</script>
+
+<!-- Add "scoped" attribute to limit CSS to this component only -->
+<style scoped>
+
+</style>
