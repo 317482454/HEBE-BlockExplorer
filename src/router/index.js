@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import Router from 'vue-router'
+
 import index from '@/components/index'
 import blocks from '@/components/block/blocks'
 import block from '@/components/block/block'

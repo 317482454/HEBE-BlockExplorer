@@ -46,7 +46,7 @@
         name: 'fhead',
         methods: {
             handleCommand(command) {
-                if(command.indexOf("type")==-1){
+                if(command&&command.indexOf("type")==-1){
                     this.$router.push('/'+command)
                 }
             },

@@ -18,14 +18,22 @@
                       border
                       style="width: 100%">
                 <el-table-column
-                        prop="senderRS"
                         label="发送地址"
                         width="280">
+                  <template slot-scope="scope">
+                    <router-link :to="'/account/'+scope.row.senderRS">
+                      <el-button type="text"> {{scope.row.senderRS}}</el-button>
+                    </router-link>
+                  </template>
                 </el-table-column>
                 <el-table-column
-                        prop="recipientRS"
                         label="接收地址"
                         width="280">
+                  <template slot-scope="scope">
+                    <router-link :to="'/account/'+scope.row.recipientRS">
+                      <el-button type="text"> {{scope.row.recipientRS}}</el-button>
+                    </router-link>
+                  </template>
                 </el-table-column>
                 <el-table-column
                         label="数量"
@@ -136,9 +144,16 @@
             </template>
           </el-table-column>
           <el-table-column
-                  prop="effectiveBalanceNXT"
                   label="锻造数量"
                   width="180">
+            <template slot-scope="scope">
+              <div v-if="scope.row.effectiveBalanceNXT">
+                {{scope.row.effectiveBalanceNXT}}
+              </div>
+              <div v-if="scope.row.effectiveBalanceAPL">
+                {{scope.row.effectiveBalanceAPL}}
+              </div>
+            </template>
           </el-table-column>
           <el-table-column
                   prop="sum"

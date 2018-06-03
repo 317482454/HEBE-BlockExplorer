@@ -16,7 +16,7 @@ export default {
               this.$store.state.apiText="HEBE"
           }
           if(type=='nxt'){
-              this.$store.state.api='https://nxterchina.org:7876/nxt?'
+              this.$store.state.api='http://nxterchina.org/nxt?'
               this.$store.state.apiText="NXT"
           }
           if(type=='dira'){
@@ -34,6 +34,16 @@ export default {
         }).then(response => {
             this.$store.state.epochBeginning=response.epochBeginning;
         });
+    },
+    watch: {
+        '$route' (to, from) {
+            this.$router.replace({
+                path: this.$route.path,
+                query: {
+                    type:this.$store.state.apiText,
+                }
+            })
+        }
     }
 }
 </script>

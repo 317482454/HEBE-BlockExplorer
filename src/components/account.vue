@@ -8,7 +8,7 @@
             </el-breadcrumb>
             <el-card  v-loading="loading" class="box-card center" style="margin-top: 16px">
                 <div slot="header" class="clearfix">
-                    <span>{{account}}</span>
+                    <span>{{accounts.accountRS}}</span>
                 </div>
 
                 <el-form  size="mini"  label-width="100px" >
@@ -26,6 +26,9 @@
                     </el-form-item>
                     <el-form-item label="账号余额">
                         {{$g.wallet.amount(accounts.balanceNQT)}}
+                    </el-form-item>
+                    <el-form-item label="锻造数量">
+                        {{$g.wallet.amount(lessorsSum)}}
                     </el-form-item>
                     <el-form-item label="锻造收益">
                         {{$g.wallet.amount(accounts.forgedBalanceNQT)}}
@@ -115,6 +118,28 @@
                         </el-table>
                         <el-button v-show="currentPageIs" @click="add" type="text">再加载15条信息</el-button>
                     </el-collapse-item>
+                    <el-collapse-item v-show="lessors.length!=0" :title="'出组人列表（'+lessors.length+'人）'" name="3">
+                        <el-table
+                                :data="lessors"
+                                border
+                                style="width: 460px">
+                            <el-table-column
+                                    label="出租地址"
+                                    width="280">
+                                <template slot-scope="scope">
+                                    <router-link :to="'/account/'+scope.row.lessorRS">
+                                        <el-button type="text"> {{scope.row.lessorRS}}</el-button>
+                                    </router-link>
+                                </template>
+                            </el-table-column>
+                            <el-table-column
+                                    label="出租数量">
+                                <template slot-scope="scope">
+                                    {{$g.wallet.amount(scope.row.guaranteedBalanceNQT)}}
+                                </template>
+                            </el-table-column>
+                        </el-table>
+                    </el-collapse-item>
                 </el-collapse>
             </el-card>
         </el-main>
@@ -143,7 +168,9 @@
                 transactions:[],
                 currentPage:1,
                 currentPageIs:true,
-                activeNames:[0]
+                activeNames:[0],
+                lessors:[],
+                lessorsSum:0
             }
         },
         methods: {
@@ -181,6 +208,26 @@
                     }
                 });
             },
+            accountLessor(){
+                this.lessors=[];
+                this.lessorsSum=0;
+                this.$ajax({
+                    method: 'get',
+                    url: 'requestType=getAccountLessors&account='+this.account,
+                }).then(response => {
+                    if(response.errorCode){
+                        this.$alert('账号地址错误', '提示', {
+                            confirmButtonText: '确定',
+                        });
+                    }
+                    else{
+                        this.lessors=response.lessors;
+                        this.lessors.forEach(item=>{
+                            this.lessorsSum=this.lessorsSum+parseInt(item.guaranteedBalanceNQT);
+                        })
+                    }
+                });
+            },
             load(){
                 this.activeNames=[0];
                 this.currentPageIs=true;
@@ -191,6 +238,7 @@
                     this.$router.replace('/');
                 }
                 this.loading=true;
+                this.accountLessor();
                 this.$ajax({
                     method: 'get',
                     url: 'requestType=getAccount&account='+this.account,
@@ -199,7 +247,8 @@
                         this.$alert('账号地址错误', '提示', {
                             confirmButtonText: '确定',
                         });
-                    }else{
+                    }
+                    else{
                         this.accounts=response;
                         this.loading=false;
                     }

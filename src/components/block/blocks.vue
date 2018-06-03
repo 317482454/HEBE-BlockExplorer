@@ -22,14 +22,22 @@
                                     border
                                     style="width: 100%">
                                 <el-table-column
-                                        prop="senderRS"
                                         label="发送地址"
                                         width="280">
+                                    <template slot-scope="scope">
+                                        <router-link :to="'/account/'+scope.row.senderRS">
+                                            <el-button type="text"> {{scope.row.senderRS}}</el-button>
+                                        </router-link>
+                                    </template>
                                 </el-table-column>
                                 <el-table-column
-                                        prop="recipientRS"
                                         label="接收地址"
                                         width="280">
+                                    <template slot-scope="scope">
+                                        <router-link :to="'/account/'+scope.row.recipientRS">
+                                            <el-button type="text"> {{scope.row.recipientRS}}</el-button>
+                                        </router-link>
+                                    </template>
                                 </el-table-column>
                                 <el-table-column
                                         label="数量"
@@ -49,12 +57,17 @@
                     </el-table-column>
                     <el-table-column
                             label="高度"
-                            width="180">
+                            width="140">
                         <template  slot-scope="scope">
                             <router-link :to="'/block/'+scope.row.height">
                                 <el-button type="text"> {{scope.row.height}}</el-button>
                             </router-link>
                         </template>
+                    </el-table-column>
+                    <el-table-column
+                            prop="block"
+                            label="区块id"
+                            width="200">
                     </el-table-column>
                     <el-table-column
                             label="时间"
